@@ -1,8 +1,8 @@
 # -----------------------------------------------------------------------------
 # Site settings
 # -----------------------------------------------------------------------------
-name: Your Name
-email: you@example.com
+name: Olamilekan F. Wahab
+email: olamyy53@gmail.com
 description: > # this means to ignore newlines until "url:"
   A simple, whitespace theme for academics. Based on [*folio](https://github.com/bogoli/-folio) design.
 footer_text: >
@@ -11,7 +11,7 @@ footer_text: >
   Photos from <a href="https://unsplash.com" target="_blank">Unsplash</a>.
 
 url:  # the base hostname & protocol for your site
-baseurl: /al-folio # the subpath of your site, e.g. /blog/
+baseurl:  # the subpath of your site, e.g. /blog/
 last_updated: # leave blank if you don't want to display last updated
 
 # -----------------------------------------------------------------------------
@@ -25,10 +25,10 @@ og_image: # The site-wide (default for all links) Open Graph preview image
 # -----------------------------------------------------------------------------
 # Social integration
 # -----------------------------------------------------------------------------
-github_username: # your GitHub user name
-twitter_username: # your Twitter handle
-linkedin_username: # your LinkedIn user name
-scholar_userid: # your Google Scholar ID
+github_username: olamyy53 # your GitHub user name
+twitter_username: __olamilekan__ # your Twitter handle
+linkedin_username: olamilekan-wahab # your LinkedIn user name
+scholar_userid: DI2QSl4AAAAJ # your Google Scholar ID
 orcid_id: # your ORCID ID
 medium_username: # your Medium username
 quora_username: # your Quora username
@@ -37,15 +37,15 @@ research_gate_profile: # your profile on ResearchGate
 blogger_url: # your blogger URL
 
 contact_note: >
-  You can even add a little note about which of these is the best way to reach you.
+  I'm mostly available via email but Twitter works fine too.
 
-google_analytics: UA-XXXXXXXXX # out your google-analytics code
+google_analytics: UA-104393656 # out your google-analytics code
 
 # -----------------------------------------------------------------------------
 # Blog
 # -----------------------------------------------------------------------------
-blog_name: al-folio
-blog_description: a simple whitespace theme for academics
+blog_name: Olamilekan's Blog
+blog_description: 
 
 # Pagination
 paginate: 4
@@ -58,11 +58,11 @@ text:
     older: 'Older'
 
 # Comments
-disqus_shortname: al-folio # put your disqus shortname
+disqus_shortname: fadilolamyywahab # put your disqus shortname
 
 # Optional features
-show_social_icons:  false
-enable_anchorjs:    false
+show_social_icons:  true
+enable_anchorjs:    true
 enable_katex:       true
 
 # -----------------------------------------------------------------------------
@@ -74,9 +74,6 @@ collections:
       layout: post
     output: true
     permalink: /news/:path/
-  projects:
-    output: true
-    permalink: /projects/:path/
 
 news_limit: 5
 
@@ -98,6 +95,7 @@ plugins:
     - jekyll-paginate
     - jekyll/scholar
     - jemoji
+    - jekyll-jupyter-notebook
 
 # Jekyll-Scholar
 scholar:

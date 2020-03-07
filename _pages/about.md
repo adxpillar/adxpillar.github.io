@@ -1,23 +1,32 @@
 ---
 layout: about
 permalink: /
-title: <strong>Your</strong> Name
-description: <a href="">Affiliations</a>. Address. Contacts. Moto. Etc.
+title: <strong>Olamilekan</strong> F. Wahab
+description: Machine Learning • Central Functions • Zalando SE
 
 profile:
   align: right
-  image: prof_pic.jpg
+  image: profile.jpg
   address: >
-    <p>555 your office number</p>
-    <p>123 your address street</p>
-    <p>Your City, State 12345</p>
+    <p>Tamara-Danz-Strasse 1</p>
+    <p>Am Pankepark 8</p>
+    <p>Berlin, 10115</p>
 
 news: true
 social: true
 ---
 
-Write your biography here. Tell the world about yourself. Link to your favorite [subreddit](http://reddit.com){:target="\_blank"}. You can put a picture in, too. The code is already in, just name your picture `prof_pic.jpg` and put it in the `img/` folder.
+I'm a Machine Learning Engineer with the Central Functions Department in [Zalando SE](https://tech.zalando.com/){:target="\_blank"}. I've also spent time consulting and building machine learning powered systems for companies across Africa, Europe and The US; 
+[Terragon (2015)](https://terragongroup.com/); 
+[Law Pavillion (2019)](https://terragongroup.com/); 
+[GBNL (2018)](http://www.greatbrandsng.com/);
+[Sikilabs (2018)](https://sikilabs.com/);
+[Unit9 (2017)](https://www.unit9.com/);
+[Code Institute (2016)](https://codeinstitute.net/).
+ A more detailed documentation is available [here](){:target="\_blank"}.
 
-Put your address / P.O. box / other info right below your picture. You can also disable any these elements by editing `profile` property of the YAML header of your `_pages/about.md`. Edit `_bibliography/papers.bib` and Jekyll will render your [publications page](/al-folio/publications/) automatically.
+### Engineering Interests
+I'm interested in the entire Machine Learning workflow i.e building scaling learning systems, productionizing learning systems, architecturing learning systems. Beyond learning systems, I'm interested in core Software Engineering especially in the Python ecosystem. Finally, I'm a huge [open sourcerer](http://github.com/olamyy).
 
-Link to your social media connections, too. This theme is set up to use [Font Awesome icons](http://fortawesome.github.io/Font-Awesome/){:target="\_blank"} and [Academicons](https://jpswalsh.github.io/academicons/){:target="\_blank"}, like the ones below. Add your Facebook, Twitter, LinkedIn, Google Scholar, or just disable all of them.
+### Research Interests
+I'm interested in Natural Language Processing research especially in Representation Learning, Question Answering and Language Modelling tasks. I'm particularly interested in the adoption of NLP methods by low resourced languages. Beyond NLP, I'm also interested in Recommender and Adversarial Systems.
