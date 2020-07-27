@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width initial-scale=1" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+  <title>Olamilekan F. Wahab | Locally Weighted Regression</title>
+  <meta name="description" content="A simple, whitespace theme for academics. Based on [*folio](https://github.com/bogoli/-folio) design.
+">
+
+  
+
+  <link rel="shortcut icon" href="/assets/img/favicon.ico">
+
+  <link rel="stylesheet" href="/assets/css/main.css">
+  <link rel="canonical" href="/blog/2018/locally-weight-regression/">
+</head>
+
+
+  <body>
+
+    <header class="site-header">
+
+  <div class="wrapper">
+
+    
+    <span class="site-title">
+        
+        <strong>Olamilekan</strong> Wahab
+    </span>
+    
+
+    <nav class="site-nav">
+      <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+              <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+              <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+      <div class="trigger">
+        <!-- About -->
+        <a class="page-link" href="/">about</a>
+
+        <!-- Blog -->
+        <a class="page-link" href="/blog/">blog</a>
+
+        <!-- Pages -->
+        
+          
+        
+          
+        
+          
+        
+          
+            <a class="page-link" href="/publications/">publications</a>
+          
+        
+          
+        
+
+        <!-- CV link -->
+        <!-- <a class="page-link" href="/assets/pdf/CV.pdf">vitae</a> -->
+
+      </div>
+    </nav>
+
+  </div>
+
+</header>
+
+
+
+    <div class="page-content">
+      <div class="wrapper">
+        <div class="post">
+
+  <header class="post-header">
+    <h1 class="post-title">Locally Weighted Regression</h1>
+    <p class="post-meta">January 30, 2018</p>
+  </header>
+
+  <article class="post-content">
+    <p>A couple of weeks back, I started a review of the linear models I’ve used over the years and and I realized that I never really understood how the locally weighted regression algorithm works. This and the fact that <code class="language-plaintext highlighter-rouge">sklearn</code> had no support for it, encouraged me to do an investigation into the working principles of the algorithm. In this post, I would attempt to provide an overview of the algorithm using mathematical inference and list some of the implementations available in Python.</p>
+
+<p>The rest of this article will be organised as follows:</p>
+
+<ul>
+  <li>Regression
+    <ul>
+      <li>Regression Function</li>
+      <li>Regression Assumptions</li>
+      <li>The Linear Regression Algorithm</li>
+    </ul>
+  </li>
+  <li>Locally Weighted Regression
+    <ul>
+      <li>Python Implementation
+        <ul>
+          <li>StatsModel Implementation</li>
+          <li>Alexandre Gramfort’s implementation</li>
+        </ul>
+      </li>
+      <li>Benchmark</li>
+    </ul>
+  </li>
+  <li>Conclusion</li>
+  <li>Resources</li>
+</ul>
+
+<h2 id="notations">Notations</h2>
+
+<p>The following notations would be used throughout this article</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Symbol</th>
+      <th style="text-align: center">Meaning</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><script type="math/tex">y</script></td>
+      <td style="text-align: center">Target Variable</td>
+    </tr>
+    <tr>
+      <td><script type="math/tex">X</script></td>
+      <td style="text-align: center">Features</td>
+    </tr>
+    <tr>
+      <td><script type="math/tex">(X, y)</script></td>
+      <td style="text-align: center">Training set</td>
+    </tr>
+    <tr>
+      <td><script type="math/tex">n</script></td>
+      <td style="text-align: center">Number of features</td>
+    </tr>
+    <tr>
+      <td><script type="math/tex">X_i, y_i</script></td>
+      <td style="text-align: center"><sup>ith</sup> index of X and y</td>
+    </tr>
+    <tr>
+      <td><script type="math/tex">m</script></td>
+      <td style="text-align: center">Number of training examples</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2 id="regression">Regression</h2>
+<p>Regression is the estimation of a continuous response variable based on the values of some other variable. The variable to be estimated is dependent on the other variable(s) in the function space. It is parametric in nature because it makes certain assumptions on the available data. If the data follows these <a href="#regression-assumptions">assumptions</a>, regression gives incredible results. Otherwise, it struggles to provide convincing accuracy.</p>
+
+<h3 id="regression-assumptions">Regression Assumptions</h3>
+
+<p>As was mentioned above, regression works best when the assumptions made about the available data are true. 
+Some of these assumptions are:</p>
+
+<ul>
+  <li>
+    <p>There exists a linear relationship between <script type="math/tex">X</script> and <script type="math/tex">y</script>.</p>
+
+    <p>This assumes that a change in <script type="math/tex">X</script> would lead to a corresponding change in <script type="math/tex">y</script>.
+  This assumptions is particularly important in linear regression of which locally weighted regression is a form.</p>
+  </li>
+  <li>
+    <p>There must be no correlation in the set of data in <script type="math/tex">X</script>.</p>
+
+    <p>The presence of correlation in <script type="math/tex">X</script> leads to a concept known as <a href="https://en.wikipedia.org/wiki/Multicollinearity">multicollinearity</a>. 
+  If variables are correlated, it becomes extremely difficult for the model to determine the true effect of <script type="math/tex">X</script> on <script type="math/tex">Y</script>.</p>
+  </li>
+  <li>
+    <p>Independence of errors</p>
+
+    <p>This assumes that the errors of the response variables are uncorrelated with each other i.e the error at <script type="math/tex">h(x)_i</script> should not indicate the error at any other point. <script type="math/tex">h(x)_i</script> is the estimate of the true function between Y and X. It’s discussed in more context below.</p>
+  </li>
+  <li>
+    <p><script type="math/tex">y</script> must have a normal distribution to the error term</p>
+  </li>
+</ul>
+
+<h3 id="regression-function">Regression Function</h3>
+<p>The regession function is a parametric function used for estimating the target variable. This function can either be linear or non-linear. Now, since this article’s main focus is the locally weighted regression which is a form of the linear regression, there would be a little more focus on linear regression.</p>
+
+<p>Linear regression is an approach for modelling the linear relationship between a scalar <script type="math/tex">y</script> and a set of variables <script type="math/tex">X</script>.</p>
+
+<p><img src="/assets/images/scatter.png" alt="Unfitted scatter plot." /> Figure 1</p>
+
+<p>Given a function whose scatter plot is above, a linear regression can be modeled to it by finding the line of best fit. Finding the <strong>line of best fit</strong> in simple terms is really just getting the best function to represent the relationship between the <script type="math/tex">X</script> and <script type="math/tex">y</script> variables. This function, mostly called the <code class="language-plaintext highlighter-rouge">linear regression function</code> or more generally the <code class="language-plaintext highlighter-rouge">hypothesis</code> is a linear function which includes a dependent variable(target), a set of independent variables(features) and an unknown parameter. It’s represented as:</p>
+
+<script type="math/tex; mode=display">h_{\theta}(x) = \theta_{0} + \theta_{1} X_{1} + \theta_{2} X_{2}+ ... + \theta_{n} X_{n} \label{a}\tag{1}</script>
+
+<p>When evaluated, <script type="math/tex">h_{\theta}(x)</script> in <script type="math/tex">\ref{a}</script> above becomes <script type="math/tex">h(x)</script>. The regression function is called <code class="language-plaintext highlighter-rouge">simple linear regression</code> when only one independent variable <script type="math/tex">(X)</script> is involved. In such cases, it becomes <script type="math/tex">h(x) = \theta_{0} + \theta_{1} X_{1} + \epsilon_{1} \label{b}\tag{2}</script> It’s called <code class="language-plaintext highlighter-rouge">multivariate linear regression</code> when there is more than a single value for <script type="math/tex">X</script>.</p>
+
+<p>Additionally, the equation above is the equation of a line, more formally represented as <script type="math/tex">y = mx + c</script> . Given this, to simplify the function, the intercept <script type="math/tex">X_{0}</script> at <script type="math/tex">\theta_{0}</script>,is assumed to be <script type="math/tex">1</script> so that it becomes a summation equation expressed as:</p>
+
+<script type="math/tex; mode=display">h(x) = \sum_{i=0}^{n} \theta_{i} X_{i} + \epsilon_{i} \label{c}\tag{3}</script>
+
+<p>An alternative representation of <script type="math/tex">\ref{c}</script> when expressed in vector form is given as:</p>
+
+<script type="math/tex; mode=display">h(x) = θ^ x_{i} \label{d}\tag{4}</script>
+
+<p>###The Linear Regression Algorithm
+The linear regression algorithm applies the regression function in one form or another in predicting values using <code class="language-plaintext highlighter-rouge">real</code> data.
+Since this prediction can never really be totally accurate, an error (represented as <script type="math/tex">\epsilon</script> in <script type="math/tex">\ref{b}</script> above) is generated.
+This error, formulated as <script type="math/tex">\epsilon = |y - h(x)|</script> is the vertical distance from the actual <script type="math/tex">y</script> value to our prediction (<script type="math/tex">h(x)</script>) for the same <script type="math/tex">x</script>.  The error has a direct relationship with the accuracy of the algorithm. This means the smaller the error, the higher the model accuracy and vice versa. As such, the algorithm attempts to minimize this error.</p>
+
+<p>The process of minimizing the error involves selecting the most appropriate features(<script type="math/tex">\theta</script>) to include in fitting the algorithm. 
+A popular approach for selecting <script type="math/tex">\theta</script>’s is making <script type="math/tex">h(x)</script> as close to to <script type="math/tex">y</script> as possible for each item in <script type="math/tex">(X, y)</script>. To do this, a function caled the <code class="language-plaintext highlighter-rouge">cost function</code> is used. The <code class="language-plaintext highlighter-rouge">cost function</code> measures the closeness of each <script type="math/tex">h(x)</script> to its corresponding <script type="math/tex">y</script>.</p>
+
+<blockquote>
+  <p>The cost function calculates the <code class="language-plaintext highlighter-rouge">cost</code> of your regression algorithm.</p>
+</blockquote>
+
+<p>It’s represented mathematically as:</p>
+
+<script type="math/tex; mode=display">J(\theta) = (\frac{1}{2}) \sum_{i=1}^{m} \left| \left(h(x)_i - y_i \right)^2\right|  \label{e}\tag{5}</script>
+
+<p>So, essentially, the linear regression algorithm tries to choose the best <script type="math/tex">\theta</script> to minimize <script type="math/tex">J(\theta)</script> which would in turn reduce the measure of error.
+To do this, the algorithm starts by :</p>
+
+<ol>
+  <li>Choosing a base value for <script type="math/tex">\theta</script>.</li>
+  <li>Updating this value to make <script type="math/tex">J(\theta)</script> smaller.</li>
+</ol>
+
+<p>This goes on for many iterations until the value of <script type="math/tex">J(\theta)</script> converges to it’s local minima. An implementation of the above steps is called the <code class="language-plaintext highlighter-rouge">gradient descent</code> algorithm.</p>
+
+<p>The working principles of the gradient descent are beyond the scope of this article and would be covered in a different article in the near future. Alternatively, a very good resource on how they work is available in Sebastian Ruder’s paper <a href="http://ruder.io/optimizing-gradient-descent/index.html">here</a>.</p>
+
+<p>In summary, to evaluate <script type="math/tex">h(x)</script>, i.e make a prediction, the linear regression algorithm:</p>
+
+<ol>
+  <li>
+    <p>Fits <script type="math/tex">\theta</script> to minimize <script type="math/tex">\sum_{i}(y_i - \theta^T x_i)^2 \label{f}\tag{6}</script>.</p>
+
+    <p>Upon successful fitting, the graph of the function above becomes
+ <img src="/assets/images/fitted_scatter.png" alt="Fitted scatter plot." /></p>
+  </li>
+  <li>
+    <p>Ouputs <script type="math/tex">\theta^T x</script>.</p>
+  </li>
+</ol>
+
+<h2 id="locally-weighted-regression">Locally Weighted Regression</h2>
+
+<p><img src="/assets/images/unfitted_lwr.png" alt="Unfitted LWR." /> Figure 3
+<img src="/assets/images/fitted_lwr.png" alt="Unfitted LWR." />   Figure 4</p>
+
+<p>Compared to Figure 1, Figure 3 above, has a relatively higher number of mountains in the input/output relationship. Attempting to fit this with linear regression would result in getting a very high error and a line of best fit that does not optimally fit the data as shown in Figure 4. This error results from the fact that linear regression generally struggles in fitting functions with non-linear relationships. These difficulties introduce a new approach for fitting non-linear multivariate regression functions called “locally weighted regression”.</p>
+
+<p>Locally weighted regression is a non-parametric variant of the linear regression for fitting data using multivariate smoothing. Often called <code class="language-plaintext highlighter-rouge">LOWESS</code> (locally weighted scatterplot smoothing), this algorithm is a mix of multiple local regression models on a meta <code class="language-plaintext highlighter-rouge">k-nearest-neighor</code>.
+It’s mostly used in cases where linear regression does not perform well i.e finds it very hard to find a line of best fit.</p>
+
+<p>It works by fitting simple models to localized subsets ,say <script type="math/tex">x</script>, of the data to build up a function that describes the deterministic part of the variation in the data. The points covered by each point (i.e neighorhood) <script type="math/tex">x</script> is calculated using k-nearest-neighors.</p>
+
+<blockquote>
+  <p>For each selected <script type="math/tex">x_i</script>, LWR selects a point <script type="math/tex">x</script> that acts as a neighorhood within which a local linear model is fitted.</p>
+</blockquote>
+
+<p>LOWESS while fitting the data, gives more weight to points within the neighorhood of <script type="math/tex">x</script> and less weight to points further away from it. A user dependent value, called the <strong>bandwidth</strong> determines the size of the data to fit each local subset. 
+The given weight <script type="math/tex">w</script> at each point <script type="math/tex">i</script> is calculated using:</p>
+
+<script type="math/tex; mode=display">w_i = \exp(- \frac{(x_i - x ) ^ 2}{2 \tau ^ 2}) \label{g}\tag{7}</script>
+
+<p>Since, a small <script type="math/tex">|x_i − x|</script> yields a <script type="math/tex">w(i)</script> close to 1 and a large  <script type="math/tex">|x_i − x|</script> yields a very small <script type="math/tex">w(i)</script>, 
+the parameter (<script type="math/tex">\theta</script>) is calculated for the LOWESS by giving more weight to the points within the 
+neighorhood of <script type="math/tex">x</script> than the points outside it.</p>
+
+<p>Essentially, this algorithm makes a prediction by:</p>
+
+<ol>
+  <li>
+    <p>Fitting <script type="math/tex">\theta</script> to minimize <script type="math/tex">\sum_{i}w_i(y_i - \theta^T x_i)^2  \tag{8}</script>.</p>
+
+    <p>The fitting is done using either <strong>weighted linear least squares</strong> or the <strong>weighted quadratic least squares</strong>. The algorithm is called the LOESS when it’s fitted using the <strong>weighted quadratic least square</strong> regression.</p>
+  </li>
+  <li>
+    <p>Ouputs <script type="math/tex">\theta^T x</script>.</p>
+  </li>
+</ol>
+
+<h3 id="python-implementation">Python Implementation</h3>
+
+<p>The support for LOWESS in Python is rather poor. This is primarily because the algorithm is computationally intensive given that it has to fit <script type="math/tex">j</script> number of lines at every point <script type="math/tex">x_i</script> within the neighorhood of <script type="math/tex">x_i</script>.</p>
+
+<p>Regardless of this challenge, there are currently 2 implementations of the LOWESS algorithm in Python that I have come across. These are:</p>
+
+<ol>
+  <li>
+    <p>Statsmodel Implementation
+<a href="http://www.statsmodels.org/devel/generated/statsmodels.nonparametric.smoothers_lowess.lowess.html">http://www.statsmodels.org/devel/generated/statsmodels.nonparametric.smoothers_lowess.lowess.html</a></p>
+
+    <p>Statsmodel is a python package that provides a range of tools for carrying out statistical computation in Python.</p>
+
+    <p>It provides support for LOWESS in it’s <code class="language-plaintext highlighter-rouge">statsmodel.nonparametric</code> module. Statsmodel supports</p>
+
+    <blockquote>
+      <p>A lowess function that outs smoothed estimates of endog at the given exog values from points (exog, endog)</p>
+    </blockquote>
+
+    <p>The <em>exog</em> and <em>endog</em> expressions in the quote above represent 1-D numpy arrays.These arrays denote <script type="math/tex">x_i</script> and <script type="math/tex">y_i</script> from the equation</p>
+
+    <p>This function takes input <script type="math/tex">y</script> and <script type="math/tex">x</script> and estimates each smooth <script type="math/tex">y_i</script> closest to <script type="math/tex">(x_i, y_i)</script> based on their values of <script type="math/tex">x</script>. It essentially uses a <strong>weighted linear least square</strong> approach to fitting the data. 
+ A downside of this is that statsmodels combines fit and predict methods into one, and so doesn’t allow prediction on new data.</p>
+  </li>
+  <li>
+    <p>Alexandre Gramfort’s implementation</p>
+
+    <p><a href="https://gist.github.com/agramfort/850437">https://gist.github.com/agramfort/850437</a></p>
+
+    <p>This implementation is quite similar to the statsmodel implementation in that it supports only 1-D numpy arrays.</p>
+
+    <p>The function is:</p>
+  </li>
+</ol>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="n">np</span>
+<span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">linalg</span>
+
+
+<span class="k">def</span> <span class="nf">agramfort_lowess</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">f</span><span class="o">=</span><span class="mf">2.</span> <span class="o">/</span> <span class="mf">3.</span><span class="p">,</span> <span class="nb">iter</span><span class="o">=</span><span class="mi">3</span><span class="p">):</span>
+    <span class="s">"""lowess(x, y, f=2./3., iter=3) -&gt; yest
+
+    Lowess smoother: Robust locally weighted regression.
+    The lowess function fits a nonparametric regression curve to a scatterplot.
+    The arrays x and y contain an equal number of elements; each pair
+    (x[i], y[i]) defines a data point in the scatterplot. The function returns
+    the estimated (smooth) values of y.
+    
+    The smoothing span is given by f. A larger value for f will result in a
+    smoother curve. The number of robustifying iterations is given by iter. The
+    function will run faster with a smaller number of iterations.
+    """</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="p">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">f</span> <span class="o">*</span> <span class="n">n</span><span class="p">))</span>
+    <span class="n">h</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="p">.</span><span class="n">sort</span><span class="p">(</span><span class="n">np</span><span class="p">.</span><span class="nb">abs</span><span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">]))[</span><span class="n">r</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">)]</span>
+    <span class="n">w</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">clip</span><span class="p">(</span><span class="n">np</span><span class="p">.</span><span class="nb">abs</span><span class="p">((</span><span class="n">x</span><span class="p">[:,</span> <span class="bp">None</span><span class="p">]</span> <span class="o">-</span> <span class="n">x</span><span class="p">[</span><span class="bp">None</span><span class="p">,</span> <span class="p">:])</span> <span class="o">/</span> <span class="n">h</span><span class="p">),</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+    <span class="n">w</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">w</span> <span class="o">**</span> <span class="mi">3</span><span class="p">)</span> <span class="o">**</span> <span class="mi">3</span>
+    <span class="n">yest</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+    <span class="n">delta</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">ones</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">iteration</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">iter</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+            <span class="n">weights</span> <span class="o">=</span> <span class="n">delta</span> <span class="o">*</span> <span class="n">w</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span>
+            <span class="n">b</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">array</span><span class="p">([</span><span class="n">np</span><span class="p">.</span><span class="nb">sum</span><span class="p">(</span><span class="n">weights</span> <span class="o">*</span> <span class="n">y</span><span class="p">),</span> <span class="n">np</span><span class="p">.</span><span class="nb">sum</span><span class="p">(</span><span class="n">weights</span> <span class="o">*</span> <span class="n">y</span> <span class="o">*</span> <span class="n">x</span><span class="p">)])</span>
+            <span class="n">A</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">array</span><span class="p">([[</span><span class="n">np</span><span class="p">.</span><span class="nb">sum</span><span class="p">(</span><span class="n">weights</span><span class="p">),</span> <span class="n">np</span><span class="p">.</span><span class="nb">sum</span><span class="p">(</span><span class="n">weights</span> <span class="o">*</span> <span class="n">x</span><span class="p">)],</span>
+                          <span class="p">[</span><span class="n">np</span><span class="p">.</span><span class="nb">sum</span><span class="p">(</span><span class="n">weights</span> <span class="o">*</span> <span class="n">x</span><span class="p">),</span> <span class="n">np</span><span class="p">.</span><span class="nb">sum</span><span class="p">(</span><span class="n">weights</span> <span class="o">*</span> <span class="n">x</span> <span class="o">*</span> <span class="n">x</span><span class="p">)]])</span>
+            <span class="n">beta</span> <span class="o">=</span> <span class="n">linalg</span><span class="p">.</span><span class="n">solve</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
+            <span class="n">yest</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">beta</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">beta</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+        <span class="n">residuals</span> <span class="o">=</span> <span class="n">y</span> <span class="o">-</span> <span class="n">yest</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">median</span><span class="p">(</span><span class="n">np</span><span class="p">.</span><span class="nb">abs</span><span class="p">(</span><span class="n">residuals</span><span class="p">))</span>
+        <span class="n">delta</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">clip</span><span class="p">(</span><span class="n">residuals</span> <span class="o">/</span> <span class="p">(</span><span class="mf">6.0</span> <span class="o">*</span> <span class="n">s</span><span class="p">),</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">delta</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">delta</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+
+    <span class="k">return</span> <span class="n">yest</span>
+
+</code></pre></div></div>
+
+<h3 id="benchmark">Benchmark</h3>
+<p>To benchmark the 3 implementations, let’s declare the following constants:</p>
+<ol>
+  <li>Let <script type="math/tex">x</script> be a set of 1000 random float between <script type="math/tex">-\tau</script> and <script type="math/tex">\tau</script>.</li>
+</ol>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">random</span><span class="p">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">low</span> <span class="o">=</span> <span class="o">-</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="p">.</span><span class="n">pi</span><span class="p">,</span> <span class="n">high</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="p">.</span><span class="n">pi</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
+</code></pre></div></div>
+
+<ol>
+  <li>Let <script type="math/tex">y</script> be a function of the sine of x.</li>
+</ol>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">y</span> <span class="o">=</span>  <span class="n">np</span><span class="p">.</span><span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>A scatter plot of the relationship between <script type="math/tex">x</script> and <script type="math/tex">y</script> is shown below:</p>
+
+<p><img src="/assets/images/statsmodel_case.png" alt="Unfitted LWR." /> Figure 3</p>
+
+<p>Now, predicting with lowess using :</p>
+
+<p>Statsmodel LOWESS:</p>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span> <span class="nn">statsmodels.api.nonparametric</span> <span class="kn">import</span> <span class="n">lowess</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="o">%</span><span class="n">timeit</span> <span class="n">lowess</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">frac</span><span class="o">=</span><span class="mf">2.</span><span class="o">/</span><span class="mi">3</span><span class="p">)</span>
+<span class="mi">1</span> <span class="n">loop</span><span class="p">,</span> <span class="n">best</span> <span class="n">of</span> <span class="mi">3</span><span class="p">:</span> <span class="mi">303</span> <span class="n">ms</span> <span class="n">per</span> <span class="n">loop</span>
+</code></pre></div></div>
+
+<p>Alexandre Gramfort’s implementation</p>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&gt;&gt;&gt;</span> <span class="o">%</span><span class="n">timeit</span> <span class="n">agramfort_lowess</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+<span class="mi">1</span> <span class="n">loop</span><span class="p">,</span> <span class="n">best</span> <span class="n">of</span> <span class="mi">3</span><span class="p">:</span> <span class="mi">837</span> <span class="n">ms</span> <span class="n">per</span> <span class="n">loop</span>
+</code></pre></div></div>
+
+<h3 id="conclusion">Conclusion</h3>
+
+<p>Though the pure LOWESS functions are hardly used in Python, I hope I’ve been able to provide a little intuition into how they work and possible implementation.</p>
+
+<p>On why this is maths intensive, while I believe we can make-do with black-box implementations of fundamental tools constructed by our more algorithmically-minded colleagues, I am a firm believer that the more understanding we have about the low-level algorithms we’re applying to our data, the better practitioners we’ll be.</p>
+
+<h3 id="resources">Resources</h3>
+
+<ol>
+  <li><a href="https://en.wikipedia.org/wiki/Linear_regression">https://en.wikipedia.org/wiki/Linear_regression</a></li>
+  <li><a href="https://jeremykun.com/2013/08/18/linear-regression/">https://jeremykun.com/2013/08/18/linear-regression/</a></li>
+  <li><a href="https://stackoverflow.com/questions/26804656/why-do-we-use-gradient-descent-in-linear-regression">https://stackoverflow.com/questions/26804656/why-do-we-use-gradient-descent-in-linear-regression</a></li>
+  <li><a href="https://en.wikipedia.org/wiki/Regression_analysis#Regression_models">https://en.wikipedia.org/wiki/Regression_analysis#Regression_models</a></li>
+  <li><a href="https://www.quora.com/In-what-situation-should-I-use-locally-weighted-linear-regression-when-I-do-predictions">https://www.quora.com/In-what-situation-should-I-use-locally-weighted-linear-regression-when-I-do-predictions</a></li>
+  <li><a href="https://www.quora.com/Why-is-that-in-locally-weighted-learning-models-we-tend-to-use-linear-regression-and-not-non-linear-ones">https://www.quora.com/Why-is-that-in-locally-weighted-learning-models-we-tend-to-use-linear-regression-and-not-non-linear-ones</a></li>
+</ol>
+
+  </article>
+
+  
+
+</div>
+
+      </div>
+    </div>
+
+    <footer>
+
+  <div class="wrapper">
+    &copy; Copyright 2020 Olamilekan F. Wahab.
+    Powered by <a href="http://jekyllrb.com/" target="_blank">Jekyll</a> with <a href="https://github.com/alshedivat/al-folio">al-folio</a> theme. Hosted by <a href="https://pages.github.com/" target="_blank">GitHub Pages</a>. Photos from <a href="https://unsplash.com" target="_blank">Unsplash</a>.
+
+    
+  </div>
+
+</footer>
+
+
+    <!-- Load jQuery -->
+<script src="//code.jquery.com/jquery-1.12.4.min.js"></script>
+
+<!-- Load Common JS -->
+<script src="/assets/js/common.js"></script>
+
+
+<!-- Load KaTeX -->
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/KaTeX/0.9.0/katex.min.css">
+<script src="//cdnjs.cloudflare.com/ajax/libs/KaTeX/0.9.0/katex.min.js"></script>
+<script src="/assets/js/katex.js"></script>
+
+
+
+<!-- Load Anchor JS -->
+<script src="//cdnjs.cloudflare.com/ajax/libs/anchor-js/3.2.2/anchor.min.js"></script>
+<script>
+  anchors.options.visible = 'always';
+  anchors.add('article h2, article h3, article h4, article h5, article h6');
+</script>
+
+
+<!-- Include custom icon fonts -->
+<link rel="stylesheet" href="/assets/css/fontawesome-all.min.css">
+<link rel="stylesheet" href="/assets/css/academicons.min.css">
+
+
+<!-- Google Analytics -->
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-104393656', 'auto');
+ga('send', 'pageview');
+</script>
+
+
+
+  </body>
+
+</html>

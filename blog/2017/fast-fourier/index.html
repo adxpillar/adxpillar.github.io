@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width initial-scale=1" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+  <title>Olamilekan F. Wahab | Generating Yoruba Names using Char-RNN</title>
+  <meta name="description" content="A simple, whitespace theme for academics. Based on [*folio](https://github.com/bogoli/-folio) design.
+">
+
+  
+
+  <link rel="shortcut icon" href="/assets/img/favicon.ico">
+
+  <link rel="stylesheet" href="/assets/css/main.css">
+  <link rel="canonical" href="/blog/2017/fast-fourier/">
+</head>
+
+
+  <body>
+
+    <header class="site-header">
+
+  <div class="wrapper">
+
+    
+    <span class="site-title">
+        
+        <strong>Olamilekan</strong> Wahab
+    </span>
+    
+
+    <nav class="site-nav">
+      <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+              <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+              <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+      <div class="trigger">
+        <!-- About -->
+        <a class="page-link" href="/">about</a>
+
+        <!-- Blog -->
+        <a class="page-link" href="/blog/">blog</a>
+
+        <!-- Pages -->
+        
+          
+        
+          
+        
+          
+        
+          
+            <a class="page-link" href="/publications/">publications</a>
+          
+        
+          
+        
+
+        <!-- CV link -->
+        <!-- <a class="page-link" href="/assets/pdf/CV.pdf">vitae</a> -->
+
+      </div>
+    </nav>
+
+  </div>
+
+</header>
+
+
+
+    <div class="page-content">
+      <div class="wrapper">
+        <div class="post">
+
+  <header class="post-header">
+    <h1 class="post-title">Generating Yoruba Names using Char-RNN</h1>
+    <p class="post-meta">November 1, 2017</p>
+  </header>
+
+  <article class="post-content">
+    <p>NOTE : This is the first of a two part blog post on the topic.</p>
+
+<p>The Fast Fourier Transform is an algorithmic optimization of the Discrete Fourier Transform.</p>
+
+<p>I came across it a couple of weeks back and found it quite interesting because it’s based on a topic I had previously done in class but never really got to use. In this post, I would give a brief explanation of the FFT algorithm stating its mathematical background. In the blogpost following this, various uses-cases of the FFT in Python would explored.</p>
+
+<p>The FFT algorithm is an implementation of the Discrete Fourier Transform which is a type of Fourier Transform. The other type is the  <strong>Inverse Discrete Fourier Transform</strong>. It’s an adaptation of the Fourier Transform, which in simple terms is an “attempt at digitizing the analog world”.</p>
+
+<h3 id="the-fourier-transform">The Fourier Transform</h3>
+<p>Everything can be described using a waveform. Waveforms are a function of time or any other variable(space for an example). The Fourier Transform provides a rather useful way of looking at these waveforms. 
+In its basic form, a Fourier Transform breaks down a waveform into sinusoids.This siusoids go a long way into proving that waves are not made of discrete number of frequencies but rather of a continuous range of frequencies.</p>
+
+<p>In mathematical terms, a Fourier Transform converts a time-based signal(wave, filter etc) into a sum of its sine and cosine waves with varying amplitude and wavelength.</p>
+
+<p>For each frequency of wave in the signal, it assigns a complex-valued coefficient. This is called the Fourier coefficient.
+The real part of this coefficient contains information about the waves’ cosine amplitude and the imaginary part contains information about the waves’ sine amplitude.</p>
+
+<h3 id="the-discrete-fourier-transform">The Discrete Fourier Transform</h3>
+<p>The DFT is further divided into two.</p>
+
+<p>The Forward Transform represented as</p>
+
+<script type="math/tex; mode=display">F(m)  = {1 \over N}\sum_{n=0}^{N-1} f(n) \cdot e^{-i2 \pi mn \over N}</script>
+
+<p>The Backward/Inverse Transform represented as</p>
+
+<script type="math/tex; mode=display">f(n)  = \sum_{m=0}^{N-1} F(m) \cdot e^{-i2 \pi mn \over N}</script>
+
+<p><script type="math/tex">f(n)</script> in both equations above is the value of the function <script type="math/tex">f</script> at point n. It can be either real or complex-valued.
+<script type="math/tex">F(m)</script> on the other hand, is the coefficient for the <script type="math/tex">m^{th}</script> wave component and can only be complex.</p>
+
+<p>The movement from <script type="math/tex">f(n)</script> to <script type="math/tex">F(m)</script> defines a change in configuration from spacial to frequency based configurations. The Fourier coefficients at this point is represented as <script type="math/tex">v_m  = {m \over t_s N}</script> where m=0, 1, 2, …, <script type="math/tex">{N \over 2}</script>    for positive frequencies and as <script type="math/tex">v_m  = -{ (N - m + 1)\over t_s N}</script> where m=<script type="math/tex">{({N\over 2}) + 1}, {({N\over 2}) + 2}, {({N\over 2}) + 3}, ... , {({N\over 2})  + N}</script> for negative frequencies.</p>
+
+<h3 id="python-implementation">Python Implementation</h3>
+
+<p>Given its relevance in so many areas, there are a lot of wrappers for computing the <strong>DFT</strong> in Python. <strong>Numpy</strong> has its <code class="language-plaintext highlighter-rouge">numpy.fft</code> function and <strong>scipy</strong> has its <code class="language-plaintext highlighter-rouge">scipy.fftpack</code> implementation of this algorithm.</p>
+
+<p>Before looking at these use cases, let’s attempt to write a dummy implementation of the <strong>DFT</strong> in python.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code> <span class="kn">import</span> <span class="nn">math</span> 
+ <span class="kn">import</span> <span class="nn">cmath</span>
+ <span class="kn">import</span> <span class="nn">numpy</span>
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">dft_with_complex_input</span><span class="p">(</span><span class="n">input_array</span><span class="p">):</span>
+    <span class="n">input_array_length</span><span class="p">,</span> <span class="n">dft_matrix</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">input_array</span><span class="p">),</span> <span class="p">[]</span> 
+    <span class="k">for</span> <span class="n">number</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">input_array_length</span><span class="p">):</span>  
+        <span class="n">array_complex</span> <span class="o">=</span> <span class="nb">complex</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">num</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">input_array_length</span><span class="p">):</span>
+            <span class="n">angle</span> <span class="o">=</span> <span class="mf">2j</span> <span class="o">*</span> <span class="n">cmath</span><span class="p">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">num</span> <span class="o">*</span> <span class="n">number</span> <span class="o">/</span> <span class="n">input_array_length</span> 
+            <span class="n">array_complex</span> <span class="o">+=</span> <span class="n">input_array</span><span class="p">[</span><span class="n">num</span><span class="p">]</span> <span class="o">*</span> <span class="n">cmath</span><span class="p">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">angle</span><span class="p">)</span>
+        <span class="n">dft_matrix</span><span class="p">.</span><span class="n">append</span><span class="p">(</span><span class="n">array_complex</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">dft_matrix</span>
+</code></pre></div></div>
+
+<p>The above function iterates through each item in the input data and manually assigns them to fields in the <strong>DFT</strong> formula above.</p>
+
+<blockquote>
+  <p>The input in this case has to be an array of real values.</p>
+</blockquote>
+
+<p>Checking the result by comparing it to numpy’s FFT implementation, we get:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">test_data</span> <span class="o">=</span> <span class="n">numpy</span><span class="p">.</span><span class="n">random</span><span class="p">.</span><span class="n">random</span><span class="p">(</span><span class="mi">200</span><span class="p">)</span>
+<span class="n">numpy</span><span class="p">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">dft_with_complex_input</span><span class="p">(</span><span class="n">test_data</span><span class="p">),</span><span class="n">numpy</span><span class="p">.</span><span class="n">fft</span><span class="p">.</span><span class="n">fft</span><span class="p">(</span><span class="n">test_data</span><span class="p">))</span>
+</code></pre></div></div>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>True
+</code></pre></div></div>
+
+<p>Looks like everything is working fine</p>
+
+<p>Timing the <strong>dft_with_complex_input</strong> and the standard numpy implementation to view run_time differences, we get</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">%</span><span class="n">timeit</span> <span class="n">standard_dft_with_complex</span><span class="p">(</span><span class="n">test_data</span><span class="p">)</span>
+<span class="o">%</span><span class="n">timeit</span> <span class="n">numpy</span><span class="p">.</span><span class="n">fft</span><span class="p">.</span><span class="n">fft</span><span class="p">(</span><span class="n">test_data</span><span class="p">)</span>
+</code></pre></div></div>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    1 loop, best of 3: 136 ms per loop
+    The slowest run took 16.43 times longer than the fastest. This could mean that an intermediate result is being cached.
+    100000 loops, best of 3: 11.7 µs per loop
+
+</code></pre></div></div>
+
+<p>From the time difference above, the <strong>__dft_with_complex_input__</strong> function is more than ten thousand times slower than the numpy implementation.</p>
+
+<p>Why?</p>
+
+<p>Its easy.</p>
+
+<p>To start with, the <code class="language-plaintext highlighter-rouge">dft_with_complex_input</code> is a rather simple implementation involving loops.
+Then it scales as an <script type="math/tex">O[N^2]</script> whereas the standard numpy implementation scales as an  <script type="math/tex">O[N log N]</script> .</p>
+
+<p>An alternative implementation of the <strong>DFT</strong> is shown below.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">dft_with_input_pair</span><span class="p">(</span><span class="n">real_input</span><span class="p">,</span> <span class="n">imaginary_input</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">real_input</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">imaginary_input</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="nb">ValueError</span><span class="p">(</span><span class="s">"The lengths should be equal"</span><span class="p">)</span>
+	<span class="n">input_array_length</span><span class="p">,</span> <span class="n">real_output</span><span class="p">,</span> <span class="n">imaginary_output</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">inreal</span><span class="p">),</span> <span class="p">[],</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">num_iterator_one</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">input_array_length</span><span class="p">):</span>
+        <span class="n">real_sum</span><span class="p">,</span> <span class="n">imaginary_sum</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span>
+		<span class="k">for</span> <span class="n">num_iterator_two</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">input_array_length</span><span class="p">):</span>  <span class="c1"># For each input element
+</span>			<span class="n">angle</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">math</span><span class="p">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">num_iterator_two</span> <span class="o">*</span> <span class="n">num_iterator_one</span> <span class="o">/</span> <span class="n">input_array_length</span>
+			<span class="n">real_sum</span> <span class="o">+=</span>  <span class="n">real_input</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">*</span> <span class="n">math</span><span class="p">.</span><span class="n">cos</span><span class="p">(</span><span class="n">angle</span><span class="p">)</span> <span class="o">+</span> <span class="n">imaginary_input</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">*</span> <span class="n">math</span><span class="p">.</span><span class="n">sin</span><span class="p">(</span><span class="n">angle</span><span class="p">)</span>
+			<span class="n">imaginary_sum</span> <span class="o">+=</span> <span class="o">-</span><span class="n">real_input</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">*</span> <span class="n">math</span><span class="p">.</span><span class="n">sin</span><span class="p">(</span><span class="n">angle</span><span class="p">)</span> <span class="o">+</span> <span class="n">imaginary_input</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">*</span> <span class="n">math</span><span class="p">.</span><span class="n">cos</span><span class="p">(</span><span class="n">angle</span><span class="p">)</span>
+		<span class="n">real_output</span><span class="p">.</span><span class="n">append</span><span class="p">(</span><span class="n">real_sum</span><span class="p">)</span>
+		<span class="n">imaginary_output</span><span class="p">.</span><span class="n">append</span><span class="p">(</span><span class="n">imaginary_sum</span><span class="p">)</span>
+	<span class="k">return</span> <span class="p">(</span><span class="n">outreal</span><span class="p">,</span> <span class="n">outimag</span><span class="p">)</span>
+</code></pre></div></div>
+<blockquote>
+  <p>The above function uses a similar approach as the first one but uses a pair of real and imaginary input.</p>
+</blockquote>
+
+<p>A third implementation of the <strong>DFT</strong> in Python is shown below.
+It uses optimised numpy array functions.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">dft_with_numpy</span><span class="p">(</span><span class="n">input_data</span><span class="p">):</span>
+    <span class="n">input_to_array</span> <span class="o">=</span> <span class="n">numpy</span><span class="p">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">input_data</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span>
+    <span class="n">input_array_shape</span> <span class="o">=</span> <span class="n">input_to_array</span><span class="p">.</span><span class="n">shape</span><span class="p">()</span>
+    <span class="n">input_array_range</span> <span class="o">=</span> <span class="n">numpy</span><span class="p">.</span><span class="n">arange</span><span class="p">(</span><span class="n">input_array_shape</span><span class="p">)</span>
+    <span class="n">input_array_rearrange</span> <span class="o">=</span> <span class="n">numpy</span><span class="p">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">input_array_shape</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+    <span class="n">output_matrix_vector</span> <span class="o">=</span> <span class="n">numpy</span><span class="p">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mf">2j</span> <span class="o">*</span> <span class="n">numpy</span><span class="p">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">input_array_rearrange</span> <span class="o">*</span> <span class="n">input_array_range</span> <span class="o">/</span> <span class="n">input_array_shape</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">numpy</span><span class="p">.</span><span class="n">dot</span><span class="p">(</span><span class="n">output_matrix_vector</span><span class="p">,</span> <span class="n">input_to_array</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>N.B : You can go ahead and check the output of each function on your own and also compare run times with that of the standard numpy and scipy implementations of the <strong>DFT</strong>.</p>
+
+<h3 id="scipy-fft">Scipy FFT</h3>
+<p>Scipy has an extensive support for the  Discrete Fourier Transform. It provides support for 3 types of FFTs.</p>
+
+<ol>
+  <li>Standard FFTs</li>
+  <li>Real FFTs</li>
+  <li>Hermitian FFTs</li>
+</ol>
+
+<h3 id="numpy-fft">Numpy FFT</h3>
+<p>Like scipy, numpy has a very thorough and very documented support for the FFT. It provides support for FFT with 5 functions under the <code class="language-plaintext highlighter-rouge">numpy.fft</code> module. These functions are:</p>
+
+<ol>
+  <li>numpy.fft.fft : This provides support for 1-Dimensional FFTs</li>
+  <li>numpy.ifft2 : This provides support for inverse 2-Dimensional FFTs</li>
+  <li>numpy.fftn : This provides support for n-D FFTs</li>
+  <li>numpy.fftshift: This shifts zero-frequency terms to the center of the array. For two-dimensional input, swaps first and third quadrants, and second and fourth quadrants.</li>
+</ol>
+
+<p>If you are able to get to this point, you should have a clear idea of what the FFT algorithm is and how it can be implemented in various forms in Python.
+In the accompanying post, I would look into each scipy and numpy fft function and give a detailed outline of their use-cases.</p>
+
+  </article>
+
+  
+
+</div>
+
+      </div>
+    </div>
+
+    <footer>
+
+  <div class="wrapper">
+    &copy; Copyright 2020 Olamilekan F. Wahab.
+    Powered by <a href="http://jekyllrb.com/" target="_blank">Jekyll</a> with <a href="https://github.com/alshedivat/al-folio">al-folio</a> theme. Hosted by <a href="https://pages.github.com/" target="_blank">GitHub Pages</a>. Photos from <a href="https://unsplash.com" target="_blank">Unsplash</a>.
+
+    
+  </div>
+
+</footer>
+
+
+    <!-- Load jQuery -->
+<script src="//code.jquery.com/jquery-1.12.4.min.js"></script>
+
+<!-- Load Common JS -->
+<script src="/assets/js/common.js"></script>
+
+
+<!-- Load KaTeX -->
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/KaTeX/0.9.0/katex.min.css">
+<script src="//cdnjs.cloudflare.com/ajax/libs/KaTeX/0.9.0/katex.min.js"></script>
+<script src="/assets/js/katex.js"></script>
+
+
+
+<!-- Load Anchor JS -->
+<script src="//cdnjs.cloudflare.com/ajax/libs/anchor-js/3.2.2/anchor.min.js"></script>
+<script>
+  anchors.options.visible = 'always';
+  anchors.add('article h2, article h3, article h4, article h5, article h6');
+</script>
+
+
+<!-- Include custom icon fonts -->
+<link rel="stylesheet" href="/assets/css/fontawesome-all.min.css">
+<link rel="stylesheet" href="/assets/css/academicons.min.css">
+
+
+<!-- Google Analytics -->
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-104393656', 'auto');
+ga('send', 'pageview');
+</script>
+
+
+
+  </body>
+
+</html>
